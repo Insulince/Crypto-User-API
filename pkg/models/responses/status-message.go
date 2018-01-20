@@ -1,6 +1,6 @@
 package responses
 
 type StatusMessage struct {
-	Status  string `json:"status"`
+	Valid  bool `json:"valid"`
 	Message string `json:"message"`
 }

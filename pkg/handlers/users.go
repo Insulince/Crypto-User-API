@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"os"
 	"crypto-users/pkg/models/responses"
+	"net/url"
+	"crypto-users/pkg/services"
 )
 
 func Register(w http.ResponseWriter, r *http.Request) () {
@@ -103,11 +105,9 @@ func Login(w http.ResponseWriter, r *http.Request) () {
 		Respond(w, responses.Error{Message: "Could not insert token."}, http.StatusInternalServerError)
 		return
 	}
-	type Response struct {
-		Message string       `json:"message"`
-		Token   models.Token `json:"token"`
-	}
-	Respond(w, Response{Message: "Success.", Token: token}, http.StatusOK)
+
+	qs := escape("?token-id=" + token.Id.Hex() + "&token-value=" + url.QueryEscape(token.Value))
+	Respond(w, responses.Token{Message: "Success.", Token: token, QS: qs}, http.StatusOK)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) () {
@@ -124,6 +124,19 @@ func Logout(w http.ResponseWriter, r *http.Request) () {
 		return
 	}
 
+	if len(queryParameters["token-value"]) != 1 {
+		fmt.Fprintln(os.Stderr, "No token-value provided.")
+		Respond(w, responses.Error{Message: "No \"token-value\" query parameter was provided, access denied."}, http.StatusBadRequest)
+		return
+	}
+
+	valid, message := services.VerifyToken(queryParameters["token-id"][0], queryParameters["token-value"][0])
+	if valid != true {
+		fmt.Fprintln(os.Stderr, message)
+		Respond(w, responses.Error{Message: "Could not invalidate token: " + message}, http.StatusInternalServerError)
+		return
+	}
+
 	err = database.InvalidateTokenWithId(queryParameters["token-id"][0])
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -131,4 +144,18 @@ func Logout(w http.ResponseWriter, r *http.Request) () {
 		return
 	}
 	Respond(w, responses.Message{Message: "Success."}, http.StatusOK)
+}
+
+func escape(qs string) (escapedQS string) {
+	escapedQS = ""
+
+	for i := 0; i < len(qs); i++ {
+		escapedQS += string(qs[i])
+
+		if qs[i] == '%' {
+			escapedQS += "%"
+		}
+	}
+
+	return escapedQS
 }
