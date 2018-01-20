@@ -22,7 +22,7 @@ func getRequestInformation(r *http.Request) (routeVariables map[string]string, q
 	return mux.Vars(r), r.URL.Query(), requestBody, nil
 }
 
-func Respond(w http.ResponseWriter, response interface{}) () {
+func Respond(w http.ResponseWriter, response interface{}, status int) () {
 	w.Header().Set("Content-Type", "application/json")
 	responseBody, err := json.Marshal(response)
 	if err != nil {
@@ -31,4 +31,5 @@ func Respond(w http.ResponseWriter, response interface{}) () {
 		return
 	}
 	fmt.Fprintf(w, string(responseBody))
+	fmt.Printf("Response sent with status %v\n", status)
 }
