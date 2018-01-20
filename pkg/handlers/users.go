@@ -111,25 +111,20 @@ func Login(w http.ResponseWriter, r *http.Request) () {
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) () {
-	_, _, rawPostBody, err := CallReceived(r)
+	_, queryParameters, _, err := CallReceived(r)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		Respond(w, responses.Error{Message: "Could not process request."}, http.StatusInternalServerError)
 		return
 	}
 
-	type PostBody struct {
-		TokenValue string `json:"token-value"`
-	}
-	var postBody PostBody
-	err = json.Unmarshal(rawPostBody, &postBody)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		Respond(w, responses.Error{Message: "Could not read request body."}, http.StatusBadRequest)
+	if len(queryParameters["token-id"]) != 1 {
+		fmt.Fprintln(os.Stderr, "No token-id")
+		Respond(w, responses.Error{Message: "No \"token-id\" query parameter provided for authentication, access denied."}, http.StatusInternalServerError)
 		return
 	}
 
-	err = database.InvalidateTokenWithValue(postBody.TokenValue)
+	err = database.InvalidateTokenWithId(queryParameters["token-id"][0])
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		Respond(w, responses.Error{Message: "Could not invalidate token."}, http.StatusInternalServerError)

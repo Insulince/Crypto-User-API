@@ -29,6 +29,12 @@ func Verify(w http.ResponseWriter, r *http.Request) () {
 		return
 	}
 
+	if token.Invalidated != false {
+		fmt.Fprintln(os.Stderr, "Token is already invalidated.")
+		Respond(w, responses.StatusError{Status: "Invalid", Message: "This token has been invalidated, please fetch a new token (login again)."}, http.StatusOK)
+		return
+	}
+
 	masterToken, err := database.GetMasterToken()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)

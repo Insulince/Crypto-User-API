@@ -119,12 +119,20 @@ func DeleteToken(id string) (err error) {
 	return Tokens().RemoveId(bson.ObjectIdHex(id))
 }
 
+func InvalidateTokenWithId(id string) (err error) {
+	token, err := FindTokenById(id)
+	if err != nil {
+		return err
+	}
+	return UpdateToken(token.Id.Hex(), bson.M{"invalidated": true})
+}
+
 func InvalidateTokenWithValue(value string) (err error) {
 	token, err := FindTokenByValue(value)
 	if err != nil {
 		return err
 	}
-	return UpdateToken(token.Id.Hex(), bson.M{"invalidated": "true"})
+	return UpdateToken(token.Id.Hex(), bson.M{"invalidated": true})
 }
 
 func GetMasterToken() (masterToken *models.Token, err error) {
