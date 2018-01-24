@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"os"
 	"crypto-users/pkg/models/responses"
-	"net/url"
 	"crypto-users/pkg/services"
 )
 
@@ -106,8 +105,7 @@ func Login(w http.ResponseWriter, r *http.Request) () {
 		return
 	}
 
-	qs := escape("?token-id=" + token.Id.Hex() + "&token-value=" + url.QueryEscape(token.Value))
-	Respond(w, responses.Token{Message: "Success.", Token: token, QS: qs}, http.StatusOK)
+	Respond(w, responses.Token{Message: "Success.", Token: token}, http.StatusOK)
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) () {
